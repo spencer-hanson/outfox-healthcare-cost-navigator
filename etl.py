@@ -2,10 +2,10 @@ import csv
 import sys
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, MetaData, Integer, Computed
-from schema import Provider, Procedure
+from src.schema import Provider, Procedure
 from sqlalchemy.orm import Session
 
-USERNAME = "example"
+USERNAME = "example" # TODO Put in config file?
 PASSWORD = "example"
 
 

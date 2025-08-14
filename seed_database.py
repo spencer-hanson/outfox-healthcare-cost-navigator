@@ -1,5 +1,5 @@
 from sqlalchemy import String, Integer, Numeric, ForeignKey, create_engine
-from schema import Base
+from src.schema import Base
 
 """
 This script is run to generate the basic schema of the database, it only needs to be run once

@@ -1,5 +1,7 @@
 services:
   webapi:
+    volumes:
+      - ./src:/code
     build:
       dockerfile: webapi.Dockerfile
     ports:
