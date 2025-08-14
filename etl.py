@@ -60,6 +60,7 @@ def parse_data(entries, column_headers, indexes):
         for column_name, column_index in column_header_to_idx.items():
             if not column_name.startswith("provider"):
                 procedure[column_name] = entry[column_index]
+        procedure["provider_id"] = entry[column_header_to_idx["provider_id"]]
 
         procedures.append(procedure)
     return providers, procedures
@@ -76,10 +77,26 @@ def populate_database(providers, procedures):
     """
     engine = create_engine(f"postgresql+psycopg2://{USERNAME}:{PASSWORD}@127.0.0.1:5432/db", echo=True)
     with Session(engine) as session:
-        entries = []
-        # Parse out providers - TODO Check for duplicate / existing!
+        provider_id_mapping = {}  # Map the provider id to the database id
+        procedure_entries = []
 
-    pass
+        # Parse out providers - TODO Check for duplicate / existing!
+        for provider_id, provider_data in providers.items():
+            prov = Provider(**provider_data)
+            session.add(prov)
+            session.commit()
+            session.refresh(prov)  # Get the updated ID into memory
+            provider_id_mapping[prov.provider_id] = prov.id
+
+        for procedure in procedures:
+            prov_id = procedure["provider_id"]
+            prov_fkey = provider_id_mapping[prov_id]  # TODO Look this up dynamically?
+            procedure["provider_fkey"] = prov_fkey
+
+            procedure_entries.append(Procedure(**procedure))
+
+        session.add_all(procedure_entries)
+        session.commit()
 
 
 def main():
@@ -105,15 +122,13 @@ def main():
         lines = list(reader)
         headers = lines[0]
         indexes = get_column_indexes(list(column_mapping.keys()), headers)
+        # TODO multithread this
+        print("Parsing out data..")
         providers, procedures = parse_data(lines[1:], list(column_mapping.values()), indexes)
-        populate_database(providers, procedures)
 
-        tw = 2
-    # engine = create_engine("postgresql+psycopg2://example:example@localhost:5432/db", echo=True)
-    # metadata = MetaData()
-    # vv = metadata.tables.keys()
-    # tw = 2
-    # pass
+        print("Populating database with data..")
+        populate_database(providers, procedures)
+    print("Done!")
 
 
 if __name__ == "__main__":
